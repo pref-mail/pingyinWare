@@ -4,7 +4,7 @@
 
 ## 下载
 
-- **Windows x64 免安装版**：到 [Releases](https://github.com/pref-mail/pingyinWare/releases) 下载 `PVZ-Teaching-1.1.0-portable.exe`（约 106 MB）
+- **Windows x64 免安装版**：[Release v1.1.0](https://github.com/pref-mail/pingyinWare/releases/tag/v1.1.0) 下载 `PVZ-Teaching-1.1.0-portable.exe`（约 106 MB）
 - 双击即可运行，无需安装；首次启动会解压到临时目录，稍慢几秒
 - 成绩保存在 `%APPDATA%\pvz-pinyin\data\scores.json`
 
