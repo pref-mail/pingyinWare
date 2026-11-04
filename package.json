@@ -2,13 +2,46 @@
   "name": "pvz-pinyin",
   "version": "1.0.0",
   "private": true,
-  "description": "植物大战僵尸·拼音版 —— Node + HTML/CSS/JS 拼音学习塔防小游戏",
-  "main": "server.js",
+  "description": "植物大战僵尸·拼音版 —— Electron 桌面版 + Node 服务",
+  "author": "pref-mail",
+  "main": "electron/main.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "electron": "electron .",
+    "build:exe": "electron-builder --win portable"
   },
   "engines": {
     "node": ">=16"
+  },
+  "devDependencies": {
+    "electron": "^45.2.2",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.prefmail.pvzpinyin",
+    "productName": "植物大战僵尸拼音版",
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "artifactName": "PVZ-Pinyin-${version}-portable.${ext}",
+    "files": [
+      "electron/**/*",
+      "public/**/*",
+      "data/words.json",
+      "server.js",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
   }
 }
