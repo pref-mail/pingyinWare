@@ -9,7 +9,9 @@
     "start": "node server.js",
     "dev": "node server.js",
     "electron": "electron .",
-    "build:exe": "electron-builder --win portable"
+    "build:exe": "electron-builder --win nsis portable",
+    "build:installer": "electron-builder --win nsis",
+    "build:portable": "electron-builder --win portable"
   },
   "engines": {
     "node": ">=16"
@@ -25,7 +27,6 @@
     "directories": {
       "output": "dist"
     },
-    "artifactName": "PVZ-Teaching-${version}-portable.${ext}",
     "files": [
       "electron/**/*",
       "public/**/*",
@@ -37,12 +38,30 @@
     "win": {
       "target": [
         {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
           "target": "portable",
           "arch": [
             "x64"
           ]
         }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "植物大战僵尸教学版",
+      "artifactName": "PVZ-Teaching-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "PVZ-Teaching-${version}-portable.${ext}"
     }
   }
 }

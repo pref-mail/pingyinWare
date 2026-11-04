@@ -19,9 +19,12 @@
 
 ## 下载
 
-- **Windows x64 免安装版**：[Release v1.1.0](https://github.com/pref-mail/pingyinWare/releases/tag/v1.1.0) 下载 `PVZ-Teaching-1.1.0-portable.exe`（约 106 MB）
-- 双击即可运行，无需安装；首次启动会解压到临时目录，稍慢几秒
-- 成绩保存在 `%APPDATA%\pvz-pinyin\data\scores.json`
+- **Windows x64 安装版（推荐）**：[Release v1.1.0](https://github.com/pref-mail/pingyinWare/releases/tag/v1.1.0) 下载 `PVZ-Teaching-Setup-1.1.0.exe`（约 116 MB）
+  - 安装后自动创建**桌面图标**和**开始菜单项**，关闭后从桌面再次打开即可
+  - 按用户安装，不需要管理员权限；可从「设置 → 应用」正常卸载
+- **免安装便携版**：同页面下载 `PVZ-Teaching-1.1.0-portable.exe`（约 106 MB）
+  - 双击运行，不写注册表、不创建快捷方式；关闭后需要再次双击原文件
+- 两种版本成绩都保存在 `%APPDATA%\pvz-pinyin\data\scores.json`
 
 ## 科目与关卡
 
@@ -77,10 +80,15 @@ npm run electron
 
 ```bash
 npm install
-npm run build:exe
+npm run build:exe        # 同时构建安装版和便携版
+npm run build:installer  # 只构建 NSIS 安装包
+npm run build:portable   # 只构建便携版
 ```
 
-产物输出到 `dist/PVZ-Teaching-1.1.0-portable.exe`。
+产物输出到 `dist/`：
+
+- `PVZ-Teaching-Setup-1.1.0.exe`：NSIS 安装包，创建桌面与开始菜单快捷方式
+- `PVZ-Teaching-1.1.0-portable.exe`：单文件便携版，不安装、不建快捷方式
 
 国内网络建议先设置镜像：
 
