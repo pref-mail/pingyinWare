@@ -36,6 +36,7 @@
       "package.json"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -57,7 +58,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "植物大战僵尸教学版",
+      "shortcutName": "植物大战僵尸 · 教学版",
       "artifactName": "PVZ-Teaching-Setup-${version}.${ext}"
     },
     "portable": {
