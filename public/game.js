@@ -547,7 +547,7 @@
     quizPanel.classList.remove('idle');
     quizChar.textContent = q.prompt;
     const len = [...q.prompt].length;
-    quizChar.style.fontSize = len > 6 ? '30px' : len > 3 ? '38px' : '';
+    quizChar.style.fontSize = len > 8 ? '24px' : len > 5 ? '28px' : len > 3 ? '36px' : '';
     quizHint.textContent = q.hint;
     quizOptions.innerHTML = '';
     q.options.forEach((opt) => {

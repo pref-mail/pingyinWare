@@ -2,6 +2,21 @@
 
 用答题打僵尸的塔防学习小游戏：僵尸举着题目进攻，选出正确答案就能秒杀它。内置语文、数学、英语三科，Node 负责服务驱动，HTML + CSS + Canvas 负责页面与动画，另有 Electron 打包的 Windows 单文件桌面版。
 
+## 界面预览
+
+<p align="center">
+  <img src="docs/screenshots/01-menu.png" alt="启动页：选择练习科目" width="760" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/02-chinese.png" alt="语文：拼音练习" width="410" />
+  <img src="docs/screenshots/03-math.png" alt="数学：分解与加减法" width="410" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/04-english.png" alt="英语：水果与动物单词" width="410" />
+</p>
+
 ## 下载
 
 - **Windows x64 免安装版**：[Release v1.1.0](https://github.com/pref-mail/pingyinWare/releases/tag/v1.1.0) 下载 `PVZ-Teaching-1.1.0-portable.exe`（约 106 MB）
@@ -93,6 +108,7 @@ npx electron-builder --win portable --config.directories.output=../pvz-build
 ├── data/
 │   ├── words.json      # 语文 3 关 × 30 词
 │   └── english.json    # 英语水果类 / 动物类词库
+├── docs/screenshots/   # README 展示截图
 └── package.json        # 脚本与 electron-builder 配置
 ```
 
