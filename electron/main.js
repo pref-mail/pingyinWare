@@ -57,7 +57,7 @@ async function startApp() {
     backgroundColor: '#0c1a10',
     autoHideMenuBar: true,
     show: false,
-    title: '植物大战僵尸 · 拼音版',
+    title: '植物大战僵尸 · 教学版',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

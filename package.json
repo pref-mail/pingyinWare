@@ -1,8 +1,8 @@
 {
   "name": "pvz-pinyin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "植物大战僵尸·拼音版 —— Electron 桌面版 + Node 服务",
+  "description": "植物大战僵尸·教学版 —— 语文拼音 / 数学口算 / 英语单词 塔防学习游戏（Electron 桌面版 + Node 服务）",
   "author": "pref-mail",
   "main": "electron/main.js",
   "scripts": {
@@ -20,16 +20,17 @@
   },
   "build": {
     "appId": "com.prefmail.pvzpinyin",
-    "productName": "植物大战僵尸拼音版",
+    "productName": "植物大战僵尸教学版",
     "asar": true,
     "directories": {
       "output": "dist"
     },
-    "artifactName": "PVZ-Pinyin-${version}-portable.${ext}",
+    "artifactName": "PVZ-Teaching-${version}-portable.${ext}",
     "files": [
       "electron/**/*",
       "public/**/*",
       "data/words.json",
+      "data/english.json",
       "server.js",
       "package.json"
     ],

@@ -1,4 +1,4 @@
-/* 植物大战僵尸 · 拼音版 —— 前端游戏逻辑 */
+/* 植物大战僵尸 · 教学版 —— 语文 / 数学 / 英语 三科塔防 */
 (function () {
   'use strict';
 
@@ -24,6 +24,30 @@
 
   const WAVE_COUNTS = { 1: 4, 2: 6, 3: 7, 4: 8, 5: 10 };
 
+  const SUBJECT_META = {
+    chinese: {
+      name: '语文',
+      icon: '📖',
+      desc: '拼音练习 · 90 个常用字',
+      stages: ['单韵母基础字', '复韵母生活字', '整体认读挑战字'],
+      winText: '拼音小达人！',
+    },
+    math: {
+      name: '数学',
+      icon: '🔢',
+      desc: '分解与加减法',
+      stages: ['1-9 的分解', '10 以内加减法', '20 以内加减法'],
+      winText: '口算小达人！',
+    },
+    english: {
+      name: '英语',
+      icon: '🔤',
+      desc: '生活常用单词',
+      stages: ['水果类单词', '动物类单词'],
+      winText: '单词小达人！',
+    },
+  };
+
   const FALLBACK_WORDS = [
     { char: '爸', pinyin: 'bà' }, { char: '妈', pinyin: 'mā' },
     { char: '大', pinyin: 'dà' }, { char: '米', pinyin: 'mǐ' },
@@ -45,6 +69,37 @@
     { char: '红', pinyin: 'hóng' }, { char: '中', pinyin: 'zhōng' },
   ];
 
+  const FALLBACK_ENGLISH = [
+    {
+      id: 'fruit',
+      name: '水果类',
+      words: [
+        { emoji: '🍎', zh: '苹果', word: 'apple' },
+        { emoji: '🍌', zh: '香蕉', word: 'banana' },
+        { emoji: '🍊', zh: '橙子', word: 'orange' },
+        { emoji: '🍇', zh: '葡萄', word: 'grape' },
+        { emoji: '🍉', zh: '西瓜', word: 'watermelon' },
+        { emoji: '🍓', zh: '草莓', word: 'strawberry' },
+        { emoji: '🍐', zh: '梨', word: 'pear' },
+        { emoji: '🍑', zh: '桃子', word: 'peach' },
+      ],
+    },
+    {
+      id: 'animal',
+      name: '动物类',
+      words: [
+        { emoji: '🐶', zh: '狗', word: 'dog' },
+        { emoji: '🐱', zh: '猫', word: 'cat' },
+        { emoji: '🐰', zh: '兔子', word: 'rabbit' },
+        { emoji: '🐼', zh: '熊猫', word: 'panda' },
+        { emoji: '🐯', zh: '老虎', word: 'tiger' },
+        { emoji: '🦁', zh: '狮子', word: 'lion' },
+        { emoji: '🐘', zh: '大象', word: 'elephant' },
+        { emoji: '🐒', zh: '猴子', word: 'monkey' },
+      ],
+    },
+  ];
+
   // ---------------- DOM ----------------
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -53,6 +108,7 @@
   const hudWave = document.getElementById('hud-wave');
   const hudScore = document.getElementById('hud-score');
   const hudCombo = document.getElementById('hud-combo');
+  const hudSubject = document.getElementById('hud-subject');
   const btnMute = document.getElementById('btn-mute');
   const btnPause = document.getElementById('btn-pause');
   const bannerEl = document.getElementById('banner');
@@ -71,10 +127,12 @@
   // ---------------- 状态 ----------------
   let words = [];
   let wordsByLevel = { 1: [], 2: [], 3: [] };
+  let englishCategories = [];
   let bestScore = 0;
 
   const state = {
     phase: 'menu',
+    subject: 'chinese',
     paused: false,
     time: 0,
     sun: 75,
@@ -226,21 +284,28 @@
     },
   };
 
-  // ---------------- 词库加载 ----------------
-  async function loadWords() {
-    let data = null;
+  // ---------------- 题库加载 ----------------
+  async function fetchJson(url) {
     try {
-      const res = await fetch('/api/words', { cache: 'no-store' });
-      if (res.ok) data = await res.json();
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) return await res.json();
     } catch (err) {
-      data = null;
+      /* 网络异常时使用内置题库兜底 */
     }
+    return null;
+  }
+
+  async function loadContent() {
+    const [cnData, enData] = await Promise.all([
+      fetchJson('/api/words'),
+      fetchJson('/api/english'),
+    ]);
 
     words = [];
     wordsByLevel = { 1: [], 2: [], 3: [] };
 
-    const levels = data && Array.isArray(data.levels) && data.levels.length
-      ? data.levels
+    const levels = cnData && Array.isArray(cnData.levels) && cnData.levels.length
+      ? cnData.levels
       : [{ id: 1, name: '基础', words: FALLBACK_WORDS }];
 
     levels.forEach((lv, idx) => {
@@ -257,6 +322,19 @@
       words = FALLBACK_WORDS.map((w) => ({ char: w.char, pinyin: w.pinyin, level: 1 }));
       wordsByLevel[1] = words;
     }
+
+    const cats = enData && Array.isArray(enData.categories) ? enData.categories : [];
+    englishCategories = cats
+      .map((cat, idx) => ({
+        id: String(cat.id || idx),
+        name: String(cat.name || '单词'),
+        words: (Array.isArray(cat.words) ? cat.words : [])
+          .filter((w) => w && typeof w.emoji === 'string' && typeof w.zh === 'string' && typeof w.word === 'string')
+          .map((w) => ({ emoji: w.emoji, zh: w.zh, word: w.word })),
+      }))
+      .filter((cat) => cat.words.length >= 4);
+
+    if (!englishCategories.length) englishCategories = FALLBACK_ENGLISH;
   }
 
   async function loadBest() {
@@ -288,16 +366,98 @@
     }
   }
 
+  function stageIndexForWave(wave) {
+    if (state.subject === 'english') return wave <= 3 ? 0 : 1;
+    return wave <= 2 ? 0 : wave <= 4 ? 1 : 2;
+  }
+
+  function stageNameForWave(wave) {
+    const meta = SUBJECT_META[state.subject];
+    return meta.stages[stageIndexForWave(wave)] || '';
+  }
+
   function poolForWave(wave) {
-    const level = wave <= 2 ? 1 : wave <= 4 ? 2 : 3;
+    const level = stageIndexForWave(wave) + 1;
     const pool = wordsByLevel[level];
     return pool && pool.length ? pool : words;
   }
 
   // ---------------- 题目 ----------------
-  function makeQuestion(zombie) {
+  function numericOptions(answer, min, max) {
+    const ans = Number(answer);
+    const lo = Number.isFinite(min) ? min : 0;
+    const hi = Number.isFinite(max) ? Math.max(max, ans) : ans + 5;
+    const set = new Set([ans]);
+    let guard = 0;
+    while (set.size < 4 && guard < 80) {
+      guard += 1;
+      const cand = ans + randInt(-3, 3);
+      if (cand < lo || cand > hi || cand === ans) continue;
+      set.add(cand);
+    }
+    let extra = lo;
+    while (set.size < 4 && extra <= hi) {
+      if (extra !== ans) set.add(extra);
+      extra += 1;
+    }
+    return shuffle([...set]).map(String);
+  }
+
+  function makeMathItem(stage) {
+    if (stage === 0) {
+      const n = randInt(2, 9);
+      const a = randInt(1, n - 1);
+      return {
+        sign: String(n),
+        prompt: `${n} = ${a} + ?`,
+        answer: String(n - a),
+        hint: `${n} 可以分成 ${a} 和几？`,
+        optionsMin: 1,
+        optionsMax: 9,
+      };
+    }
+
+    const max = stage === 1 ? 10 : 20;
+    if (Math.random() < 0.5) {
+      const a = randInt(1, max - 3);
+      const b = randInt(1, max - a);
+      return {
+        sign: `${a}+${b}`,
+        prompt: `${a} + ${b} = ?`,
+        answer: String(a + b),
+        hint: '算一算，答案是多少？',
+        optionsMin: 0,
+        optionsMax: max,
+      };
+    }
+    const a = randInt(2, max);
+    const b = randInt(1, a - 1);
+    return {
+      sign: `${a}−${b}`,
+      prompt: `${a} − ${b} = ?`,
+      answer: String(a - b),
+      hint: '算一算，答案是多少？',
+      optionsMin: 0,
+      optionsMax: max,
+    };
+  }
+
+  function makeEnglishItem(stage) {
+    const cat = englishCategories[Math.min(stage, englishCategories.length - 1)] || englishCategories[0];
+    const item = pick(cat.words);
+    return { emoji: item.emoji, zh: item.zh, word: item.word, category: cat.id };
+  }
+
+  function makeItemForStage(stage) {
+    if (state.subject === 'math') return makeMathItem(stage);
+    if (state.subject === 'english') return makeEnglishItem(stage);
+    const pool = wordsByLevel[stage + 1];
+    return { ...pick(pool && pool.length ? pool : words), stage };
+  }
+
+  function makeChineseQuestion(zombie) {
     const pool = poolForWave(state.wave);
-    const correct = zombie.word.pinyin;
+    const correct = zombie.item.pinyin;
     const seen = new Set([correct]);
     const options = [correct];
 
@@ -320,11 +480,59 @@
     }
 
     return {
-      char: zombie.word.char,
-      pinyin: correct,
+      prompt: zombie.item.char,
+      answer: correct,
+      hint: `「${zombie.item.char}」的拼音是？点选项发射豌豆`,
       options: shuffle(options),
       targetId: zombie.id,
     };
+  }
+
+  function makeEnglishQuestion(zombie) {
+    const item = zombie.item;
+    const cat = englishCategories.find((c) => c.id === item.category) || englishCategories[0];
+    const correct = item.word;
+    const seen = new Set([correct]);
+    const options = [correct];
+
+    const candidates = shuffle(cat.words.map((w) => w.word).filter((w) => !seen.has(w)));
+    for (let i = 0; i < candidates.length && options.length < 4; i += 1) {
+      if (seen.has(candidates[i])) continue;
+      seen.add(candidates[i]);
+      options.push(candidates[i]);
+    }
+
+    if (options.length < 4) {
+      const all = shuffle(englishCategories.flatMap((c) => c.words.map((w) => w.word)));
+      for (let i = 0; i < all.length && options.length < 4; i += 1) {
+        if (seen.has(all[i])) continue;
+        seen.add(all[i]);
+        options.push(all[i]);
+      }
+    }
+
+    return {
+      prompt: item.emoji,
+      answer: correct,
+      hint: `「${item.zh}」的英文单词是？`,
+      options: shuffle(options),
+      targetId: zombie.id,
+    };
+  }
+
+  function makeQuestion(zombie) {
+    const item = zombie.item;
+    if (state.subject === 'math') {
+      return {
+        prompt: item.prompt,
+        answer: item.answer,
+        hint: item.hint,
+        options: numericOptions(Number(item.answer), item.optionsMin, item.optionsMax),
+        targetId: zombie.id,
+      };
+    }
+    if (state.subject === 'english') return makeEnglishQuestion(zombie);
+    return makeChineseQuestion(zombie);
   }
 
   function renderQuiz() {
@@ -337,8 +545,10 @@
       return;
     }
     quizPanel.classList.remove('idle');
-    quizChar.textContent = q.char;
-    quizHint.textContent = `「${q.char}」的拼音是？点选项发射豌豆`;
+    quizChar.textContent = q.prompt;
+    const len = [...q.prompt].length;
+    quizChar.style.fontSize = len > 6 ? '30px' : len > 3 ? '38px' : '';
+    quizHint.textContent = q.hint;
     quizOptions.innerHTML = '';
     q.options.forEach((opt) => {
       const btn = document.createElement('button');
@@ -387,7 +597,7 @@
     if (!q || state.phase !== 'playing' || state.paused || state.questionLocked) return;
     AudioFX.init();
 
-    if (optionText === q.pinyin) {
+    if (optionText === q.answer) {
       state.questionLocked = true;
       state.resolveTimer = 0.34;
       btn.classList.add('correct');
@@ -424,7 +634,7 @@
       btn.classList.add('wrong');
       btn.disabled = true;
       Array.from(quizOptions.children).forEach((b) => {
-        if (b.textContent === q.pinyin) b.classList.add('reveal');
+        if (b.textContent === q.answer) b.classList.add('reveal');
       });
 
       state.combo = 0;
@@ -492,19 +702,19 @@
     state.phase = 'playing';
     state.wave = n;
     const count = WAVE_COUNTS[n] || 10;
-    const pool = poolForWave(n);
+    const stage = stageIndexForWave(n);
 
     state.spawnQueue = [];
     for (let i = 0; i < count; i += 1) {
       state.spawnQueue.push({
         type: rollZombieType(n),
         lane: randInt(0, ROWS - 1),
-        word: pick(pool),
+        item: makeItemForStage(stage),
       });
     }
     state.spawnTimer = 1.1;
 
-    showBanner(`第 ${n} 波来袭！`, 1500);
+    showBanner(`第 ${n} 波来袭！· ${stageNameForWave(n)}`, 1800);
     AudioFX.wave();
     updateHUD();
   }
@@ -545,7 +755,7 @@
       row: spec.lane,
       x: W + 40,
       y: center.y,
-      word: spec.word,
+      item: spec.item,
       hp,
       maxHp: hp,
       speed,
@@ -915,6 +1125,18 @@
     }
   }
 
+  function zombieSign(z) {
+    if (state.subject === 'english') {
+      return { emoji: z.item.emoji, w: 46, h: 44, emojiSize: 26 };
+    }
+    if (state.subject === 'math') {
+      const text = z.item.sign;
+      const wide = [...text].length > 3;
+      return { text, w: wide ? 64 : 44, h: 34, fontSize: wide ? 17 : 21 };
+    }
+    return { text: z.item.char, w: 44, h: 34, fontSize: 21 };
+  }
+
   function drawZombies() {
     for (let i = 0; i < state.zombies.length; i += 1) {
       const z = state.zombies[i];
@@ -938,10 +1160,11 @@
         ctx.fill();
       }
 
-      const signW = 44;
-      const signH = 34;
+      const card = zombieSign(z);
+      const signW = card.w;
+      const signH = card.h;
       const sx = x - signW / 2;
-      const sy = y - 66;
+      const sy = y - 30 - signH;
 
       ctx.strokeStyle = '#8a6a2f';
       ctx.lineWidth = 3;
@@ -957,11 +1180,15 @@
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      ctx.fillStyle = '#3b2b12';
-      ctx.font = '700 21px "Microsoft YaHei", "PingFang SC", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(z.word.char, x, sy + signH / 2 + 1);
+      if (card.emoji) {
+        drawEmoji(card.emoji, x, sy + signH / 2, card.emojiSize);
+      } else {
+        ctx.fillStyle = '#3b2b12';
+        ctx.font = `700 ${card.fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(card.text, x, sy + signH / 2 + 1);
+      }
 
       if (z.maxHp > 1) {
         const barW = 40;
@@ -1088,6 +1315,8 @@
     hudWave.textContent = `${Math.max(1, state.wave)}/${TOTAL_WAVES}`;
     hudScore.textContent = String(state.score);
     hudCombo.textContent = `×${state.combo}`;
+    const meta = SUBJECT_META[state.subject] || SUBJECT_META.chinese;
+    if (hudSubject) hudSubject.textContent = `${meta.icon} ${meta.name}`;
 
     const seeds = document.querySelectorAll('.seed');
     for (let i = 0; i < seeds.length; i += 1) {
@@ -1131,23 +1360,34 @@
   // ---------------- 流程 ----------------
   function showMenu() {
     state.phase = 'menu';
+    const cards = Object.entries(SUBJECT_META).map(([key, meta]) => `
+      <button class="subject-card" data-subject="${key}" type="button">
+        <span class="subject-icon">${meta.icon}</span>
+        <span class="subject-name">${meta.name}</span>
+        <span class="subject-desc">${meta.desc}</span>
+        <span class="subject-stages">${meta.stages.join(' · ')}</span>
+      </button>
+    `).join('');
+
     showOverlay(`
-      <h1>植物大战僵尸 <span>拼音版</span></h1>
-      <p>用拼音击退僵尸，守住你的草坪！</p>
+      <h1>植物大战僵尸 <span>教学版</span></h1>
+      <p>选一个科目，边守草坪边练习</p>
+      <div class="subject-grid">${cards}</div>
       <ul class="rules">
-        <li>🧟 僵尸举着汉字，选出正确的拼音即可立即消灭它</li>
+        <li>🧟 僵尸举着题目，选出正确答案即可立即消灭它</li>
         <li>🌻 向日葵每隔几秒自动产出阳光；🌱 豌豆射手会帮你补刀</li>
         <li>🖱️ 点击任意僵尸可切换题目目标，别让它们走到房子前</li>
       </ul>
-      <button class="btn-primary" id="btn-start" type="button">开始游戏</button>
       <p class="best">历史最高分：<b>${bestScore}</b></p>
     `);
-    const btn = document.getElementById('btn-start');
-    if (btn) btn.addEventListener('click', startGame);
+    overlayCard.querySelectorAll('.subject-card').forEach((btn) => {
+      btn.addEventListener('click', () => startGame(btn.dataset.subject));
+    });
   }
 
-  function startGame() {
+  function startGame(subject) {
     AudioFX.init();
+    state.subject = SUBJECT_META[subject] ? subject : state.subject;
     Object.assign(state, {
       phase: 'playing',
       paused: false,
@@ -1199,11 +1439,13 @@
       <h2>🧟 僵尸吃掉了你的脑子…</h2>
       <p>本局得分 <b style="color:#ffd23f">${state.score}</b> · 最高连击 ×${state.maxCombo}</p>
       <p>你坚持到了第 <b>${state.wave}</b> 波</p>
-      <button class="btn-primary" id="btn-again" type="button">再玩一次</button>
+      <div class="overlay-actions">
+        <button class="btn-primary" id="btn-again" type="button">再玩一次</button>
+        <button class="btn-ghost" id="btn-menu" type="button">换科目</button>
+      </div>
       <p class="best">历史最高分：<b>${bestScore}</b></p>
     `);
-    const btn = document.getElementById('btn-again');
-    if (btn) btn.addEventListener('click', startGame);
+    wireEndButtons();
     submitScore().then(() => {
       const b = overlayCard.querySelector('.best b');
       if (b) b.textContent = String(bestScore);
@@ -1221,16 +1463,25 @@
     showOverlay(`
       <h2>🎉 你守住了草坪！</h2>
       <p>本局得分 <b style="color:#ffd23f">${state.score}</b> · 最高连击 ×${state.maxCombo}</p>
-      <p>成功挡下全部 ${TOTAL_WAVES} 波僵尸，拼音小达人！</p>
-      <button class="btn-primary" id="btn-again" type="button">再玩一次</button>
+      <p>成功挡下全部 ${TOTAL_WAVES} 波僵尸，${SUBJECT_META[state.subject].winText}</p>
+      <div class="overlay-actions">
+        <button class="btn-primary" id="btn-again" type="button">再玩一次</button>
+        <button class="btn-ghost" id="btn-menu" type="button">换科目</button>
+      </div>
       <p class="best">历史最高分：<b>${bestScore}</b></p>
     `);
-    const btn = document.getElementById('btn-again');
-    if (btn) btn.addEventListener('click', startGame);
+    wireEndButtons();
     submitScore().then(() => {
       const b = overlayCard.querySelector('.best b');
       if (b) b.textContent = String(bestScore);
     });
+  }
+
+  function wireEndButtons() {
+    const again = document.getElementById('btn-again');
+    if (again) again.addEventListener('click', () => startGame(state.subject));
+    const menu = document.getElementById('btn-menu');
+    if (menu) menu.addEventListener('click', showMenu);
   }
 
   function togglePause() {
@@ -1333,7 +1584,7 @@
   async function boot() {
     updateHUD();
     render();
-    await Promise.all([loadWords(), loadBest()]);
+    await Promise.all([loadContent(), loadBest()]);
     showMenu();
     requestAnimationFrame(loop);
   }

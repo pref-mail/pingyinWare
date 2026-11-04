@@ -1,0 +1,47 @@
+{
+  "categories": [
+    {
+      "id": "fruit",
+      "name": "水果类",
+      "words": [
+        { "emoji": "🍎", "zh": "苹果", "word": "apple" },
+        { "emoji": "🍌", "zh": "香蕉", "word": "banana" },
+        { "emoji": "🍊", "zh": "橙子", "word": "orange" },
+        { "emoji": "🍇", "zh": "葡萄", "word": "grape" },
+        { "emoji": "🍉", "zh": "西瓜", "word": "watermelon" },
+        { "emoji": "🍓", "zh": "草莓", "word": "strawberry" },
+        { "emoji": "🍐", "zh": "梨", "word": "pear" },
+        { "emoji": "🍑", "zh": "桃子", "word": "peach" },
+        { "emoji": "🍒", "zh": "樱桃", "word": "cherry" },
+        { "emoji": "🍋", "zh": "柠檬", "word": "lemon" },
+        { "emoji": "🥭", "zh": "芒果", "word": "mango" },
+        { "emoji": "🍍", "zh": "菠萝", "word": "pineapple" },
+        { "emoji": "🥥", "zh": "椰子", "word": "coconut" },
+        { "emoji": "🥝", "zh": "猕猴桃", "word": "kiwi" },
+        { "emoji": "🫐", "zh": "蓝莓", "word": "blueberry" }
+      ]
+    },
+    {
+      "id": "animal",
+      "name": "动物类",
+      "words": [
+        { "emoji": "🐶", "zh": "狗", "word": "dog" },
+        { "emoji": "🐱", "zh": "猫", "word": "cat" },
+        { "emoji": "🐰", "zh": "兔子", "word": "rabbit" },
+        { "emoji": "🐼", "zh": "熊猫", "word": "panda" },
+        { "emoji": "🐯", "zh": "老虎", "word": "tiger" },
+        { "emoji": "🦁", "zh": "狮子", "word": "lion" },
+        { "emoji": "🐘", "zh": "大象", "word": "elephant" },
+        { "emoji": "🐒", "zh": "猴子", "word": "monkey" },
+        { "emoji": "🐷", "zh": "猪", "word": "pig" },
+        { "emoji": "🐮", "zh": "奶牛", "word": "cow" },
+        { "emoji": "🐴", "zh": "马", "word": "horse" },
+        { "emoji": "🐑", "zh": "绵羊", "word": "sheep" },
+        { "emoji": "🐔", "zh": "鸡", "word": "chicken" },
+        { "emoji": "🦆", "zh": "鸭子", "word": "duck" },
+        { "emoji": "🐟", "zh": "鱼", "word": "fish" },
+        { "emoji": "🐦", "zh": "鸟", "word": "bird" }
+      ]
+    }
+  ]
+}

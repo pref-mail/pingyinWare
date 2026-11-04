@@ -9,6 +9,7 @@ const DEFAULT_ROOT = __dirname;
 const DEFAULT_PUBLIC_DIR = path.join(DEFAULT_ROOT, 'public');
 const DEFAULT_DATA_DIR = path.join(DEFAULT_ROOT, 'data');
 const DEFAULT_WORDS_FILE = path.join(DEFAULT_DATA_DIR, 'words.json');
+const DEFAULT_ENGLISH_FILE = path.join(DEFAULT_DATA_DIR, 'english.json');
 const DEFAULT_PORT = Number(process.env.PORT) || 3000;
 const MAX_BODY = 16 * 1024;
 
@@ -30,11 +31,13 @@ function createServer(options) {
   const opts = options || {};
   const publicDir = opts.publicDir || DEFAULT_PUBLIC_DIR;
   const wordsFile = opts.wordsFile || DEFAULT_WORDS_FILE;
+  const englishFile = opts.englishFile || DEFAULT_ENGLISH_FILE;
   const dataDir = opts.dataDir || DEFAULT_DATA_DIR;
   const scoresFile = path.join(dataDir, 'scores.json');
   const host = opts.host || '127.0.0.1';
 
   let wordsCache = null;
+  let englishCache = null;
   let scoreWriteChain = Promise.resolve();
 
   function sendJson(res, status, payload) {
@@ -70,6 +73,13 @@ function createServer(options) {
     const raw = await fsp.readFile(wordsFile, 'utf8');
     wordsCache = JSON.parse(raw);
     return wordsCache;
+  }
+
+  async function loadEnglish() {
+    if (englishCache) return englishCache;
+    const raw = await fsp.readFile(englishFile, 'utf8');
+    englishCache = JSON.parse(raw);
+    return englishCache;
   }
 
   async function loadScores() {
@@ -143,6 +153,15 @@ function createServer(options) {
         } catch (err) {
           console.error('[words] 读取失败:', err.message);
           return sendJson(res, 500, { error: '词库读取失败' });
+        }
+      }
+
+      if (req.method === 'GET' && pathname === '/api/english') {
+        try {
+          return sendJson(res, 200, await loadEnglish());
+        } catch (err) {
+          console.error('[english] 读取失败:', err.message);
+          return sendJson(res, 500, { error: '英语词库读取失败' });
         }
       }
 
@@ -225,7 +244,7 @@ if (require.main === module) {
   const app = createServer();
   app.start(DEFAULT_PORT)
     .then(({ port }) => {
-      console.log('\n  🧟 植物大战僵尸 · 拼音版 已启动');
+      console.log('\n  🧟 植物大战僵尸 · 教学版 已启动');
       console.log(`  ➜  http://localhost:${port}\n`);
     })
     .catch((err) => {
