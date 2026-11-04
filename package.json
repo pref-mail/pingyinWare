@@ -1,0 +1,14 @@
+{
+  "name": "pvz-pinyin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "植物大战僵尸·拼音版 —— Node + HTML/CSS/JS 拼音学习塔防小游戏",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

@@ -1,0 +1,11 @@
+# 依赖
+node_modules/
+
+# 运行时数据（服务会自动生成）
+data/scores.json
+data/scores.json.tmp
+
+# 日志与系统文件
+*.log
+.DS_Store
+Thumbs.db

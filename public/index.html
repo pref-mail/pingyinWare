@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>植物大战僵尸 · 拼音版</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="hud">
+      <div class="hud-item" title="阳光"><span class="hud-icon">☀️</span><b id="hud-sun">75</b></div>
+      <div class="hud-item" title="生命"><span id="hud-lives">❤️❤️❤️</span></div>
+      <div class="hud-item" title="波次">波次 <b id="hud-wave">1/5</b></div>
+      <div class="hud-item" title="得分">得分 <b id="hud-score">0</b></div>
+      <div class="hud-item hud-combo" title="连击">连击 <b id="hud-combo">×0</b></div>
+      <div class="hud-spacer"></div>
+      <button id="btn-mute" class="hud-btn" type="button" title="声音">🔊</button>
+      <button id="btn-pause" class="hud-btn" type="button" title="暂停">⏸️</button>
+    </header>
+
+    <div id="seedbar">
+      <button class="seed" data-seed="sunflower" type="button">
+        <span class="seed-emoji">🌻</span>
+        <span class="seed-name">向日葵</span>
+        <span class="seed-cost">☀️ 50</span>
+      </button>
+      <button class="seed" data-seed="peashooter" type="button">
+        <span class="seed-emoji">🌱</span>
+        <span class="seed-name">豌豆射手</span>
+        <span class="seed-cost">☀️ 100</span>
+      </button>
+      <button class="seed" data-seed="shovel" type="button">
+        <span class="seed-emoji">🧹</span>
+        <span class="seed-name">铲子</span>
+        <span class="seed-cost">移除植物</span>
+      </button>
+      <div class="seedbar-tip">先点选植物，再点草坪格子种植</div>
+    </div>
+
+    <div id="stage">
+      <canvas id="game" width="980" height="560"></canvas>
+      <div id="banner" class="banner"></div>
+      <div id="toast" class="toast"></div>
+      <div id="overlay" class="overlay">
+        <div class="overlay-card" id="overlay-card">
+          <p>正在加载拼音词库…</p>
+        </div>
+      </div>
+      <div id="pause-veil" class="overlay hidden">
+        <div class="overlay-card">
+          <h2>已暂停</h2>
+          <p>休息一下，僵尸也在等你。</p>
+          <button class="btn-primary" id="btn-resume" type="button">继续游戏</button>
+        </div>
+      </div>
+    </div>
+
+    <section id="quiz" class="quiz idle">
+      <div class="quiz-char-wrap">
+        <div class="quiz-label">当前目标</div>
+        <div class="quiz-char" id="quiz-char">？</div>
+      </div>
+      <div class="quiz-main">
+        <div class="quiz-hint" id="quiz-hint">草坪暂时安全，专心种植物吧</div>
+        <div class="quiz-options" id="quiz-options"></div>
+      </div>
+    </section>
+
+    <footer id="foot">点击僵尸可切换题目目标 · 答对立即消灭僵尸并获得阳光 · 键盘 1/2 选植物，Esc 取消，空格暂停</footer>
+  </div>
+
+  <script src="/game.js"></script>
+</body>
+</html>
