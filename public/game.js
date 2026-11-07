@@ -121,6 +121,7 @@
   const hudCombo = document.getElementById('hud-combo');
   const hudSubject = document.getElementById('hud-subject');
   const menuBgm = document.getElementById('menu-bgm');
+  const battleBgm = document.getElementById('battle-bgm');
   const btnMute = document.getElementById('btn-mute');
   const btnPause = document.getElementById('btn-pause');
   const bannerEl = document.getElementById('banner');
@@ -137,6 +138,7 @@
   canvas.height = H;
 
   menuBgm.volume = 0.35;
+  battleBgm.volume = 0.3;
 
   function playMenuMusic() {
     if (!menuBgm || state.muted || state.phase !== 'menu') return;
@@ -150,6 +152,27 @@
     if (!menuBgm) return;
     menuBgm.pause();
     menuBgm.currentTime = 0;
+  }
+
+  function playBattleMusic() {
+    if (!battleBgm) return;
+    if (state.muted || state.paused) return;
+    if (state.phase !== 'playing' && state.phase !== 'break') return;
+    const played = battleBgm.play();
+    if (played && typeof played.catch === 'function') {
+      played.catch(() => { /* 等用户交互后重试 */ });
+    }
+  }
+
+  function stopBattleMusic() {
+    if (!battleBgm) return;
+    battleBgm.pause();
+    battleBgm.currentTime = 0;
+  }
+
+  function pauseBattleMusic() {
+    if (!battleBgm) return;
+    battleBgm.pause();
   }
 
   const plantImages = { peashooter: null };
@@ -1523,6 +1546,7 @@
         else startGame(btn.dataset.subject);
       });
     });
+    stopBattleMusic();
     playMenuMusic();
   }
 
@@ -1552,12 +1576,14 @@
     });
     const back = document.getElementById('btn-back-subjects');
     if (back) back.addEventListener('click', showMenu);
+    stopBattleMusic();
     playMenuMusic();
   }
 
   function startGame(subject, mode) {
     AudioFX.init();
     stopMenuMusic();
+    stopBattleMusic();
     state.subject = SUBJECT_META[subject] ? subject : state.subject;
     if (MATH_MODES[mode]) state.mathMode = mode;
     Object.assign(state, {
@@ -1597,11 +1623,13 @@
     renderQuiz();
     updateHUD();
     startWave(1);
+    playBattleMusic();
   }
 
   function gameOver() {
     state.phase = 'over';
     state.paused = false;
+    stopBattleMusic();
     state.question = null;
     state.activeId = null;
     state.questionLocked = false;
@@ -1627,6 +1655,7 @@
   function winGame() {
     state.phase = 'win';
     state.paused = false;
+    stopBattleMusic();
     state.question = null;
     state.activeId = null;
     state.questionLocked = false;
@@ -1664,6 +1693,8 @@
     state.paused = !state.paused;
     pauseVeil.classList.toggle('hidden', !state.paused);
     btnPause.textContent = state.paused ? '▶️' : '⏸️';
+    if (state.paused) pauseBattleMusic();
+    else playBattleMusic();
   }
 
   // ---------------- 交互 ----------------
@@ -1729,7 +1760,11 @@
     state.muted = !state.muted;
     btnMute.textContent = state.muted ? '🔇' : '🔊';
     menuBgm.muted = state.muted;
-    if (!state.muted) playMenuMusic();
+    battleBgm.muted = state.muted;
+    if (!state.muted) {
+      playMenuMusic();
+      playBattleMusic();
+    }
   });
 
   window.addEventListener('keydown', (event) => {
