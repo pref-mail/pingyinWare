@@ -35,8 +35,8 @@
     math: {
       name: '数学',
       icon: '🔢',
-      desc: '分解与加减法',
-      stages: ['1-9 的分解', '10 以内加减法', '20 以内加减法'],
+      desc: '常规练习 · 颠倒数练习',
+      stages: ['1-9 分解', '10 以内加减', '20 以内加减', '颠倒和差'],
       winText: '口算小达人！',
     },
     english: {
@@ -68,6 +68,17 @@
     { char: '星', pinyin: 'xīng' }, { char: '龙', pinyin: 'lóng' },
     { char: '红', pinyin: 'hóng' }, { char: '中', pinyin: 'zhōng' },
   ];
+
+  const MATH_MODES = {
+    normal: {
+      name: '常规练习',
+      stages: ['1-9 的分解', '10 以内加减法', '20 以内加减法'],
+    },
+    inverse: {
+      name: '颠倒数练习',
+      stages: ['两位数颠倒和与差', '三位数颠倒和与差', '两三位数综合挑战'],
+    },
+  };
 
   const FALLBACK_ENGLISH = [
     {
@@ -140,6 +151,7 @@
   const state = {
     phase: 'menu',
     subject: 'chinese',
+    mathMode: 'normal',
     paused: false,
     time: 0,
     sun: 75,
@@ -384,8 +396,10 @@
   }
 
   function stageNameForWave(wave) {
-    const meta = SUBJECT_META[state.subject];
-    return meta.stages[stageIndexForWave(wave)] || '';
+    const stages = state.subject === 'math'
+      ? (MATH_MODES[state.mathMode] || MATH_MODES.normal).stages
+      : SUBJECT_META[state.subject].stages;
+    return stages[stageIndexForWave(wave)] || '';
   }
 
   function poolForWave(wave) {
@@ -454,6 +468,51 @@
     };
   }
 
+  function makeReversalMathItem(stage) {
+    const threeDigits = stage === 1 || (stage === 2 && Math.random() < 0.5);
+
+    if (!threeDigits) {
+      const a = randInt(1, 9);
+      let b = randInt(1, 9);
+      while (b === a) b = randInt(1, 9);
+      const n = a * 10 + b;
+      const r = b * 10 + a;
+      const isSum = Math.random() < 0.5;
+      const hi = Math.max(n, r);
+      const lo = Math.min(n, r);
+      const answer = isSum ? n + r : hi - lo;
+      return {
+        sign: String(n),
+        prompt: isSum ? `${n} + ${r} = ?` : `${hi} − ${lo} = ?`,
+        answer: String(answer),
+        hint: isSum ? '规律：和 = 11 ×（十位 + 个位）' : '规律：差 = 9 ×（十位 − 个位）',
+        optionsMin: 0,
+        optionsMax: Math.max(100, answer + 20),
+      };
+    }
+
+    const a = randInt(1, 9);
+    let c = randInt(1, 9);
+    while (c === a) c = randInt(1, 9);
+    const b = randInt(0, 9);
+    const n = a * 100 + b * 10 + c;
+    const r = c * 100 + b * 10 + a;
+    const isSum = Math.random() < 0.5;
+    const hi = Math.max(n, r);
+    const lo = Math.min(n, r);
+    const answer = isSum ? n + r : hi - lo;
+    return {
+      sign: String(n),
+      prompt: isSum ? `${n} + ${r} = ?` : `${hi} − ${lo} = ?`,
+      answer: String(answer),
+      hint: isSum
+        ? '规律：和 = 101 ×（百位 + 个位）+ 20 × 十位'
+        : '规律：差 = 99 ×（百位 − 个位）',
+      optionsMin: 0,
+      optionsMax: Math.max(1000, answer + 50),
+    };
+  }
+
   function makeEnglishItem(stage) {
     const cat = englishCategories[Math.min(stage, englishCategories.length - 1)] || englishCategories[0];
     const item = pick(cat.words);
@@ -461,7 +520,9 @@
   }
 
   function makeItemForStage(stage) {
-    if (state.subject === 'math') return makeMathItem(stage);
+    if (state.subject === 'math') {
+      return state.mathMode === 'inverse' ? makeReversalMathItem(stage) : makeMathItem(stage);
+    }
     if (state.subject === 'english') return makeEnglishItem(stage);
     const pool = wordsByLevel[stage + 1];
     return { ...pick(pool && pool.length ? pool : words), stage };
@@ -559,7 +620,7 @@
     quizPanel.classList.remove('idle');
     quizChar.textContent = q.prompt;
     const len = [...q.prompt].length;
-    quizChar.style.fontSize = len > 8 ? '24px' : len > 5 ? '28px' : len > 3 ? '36px' : '';
+    quizChar.style.fontSize = len > 12 ? '20px' : len > 9 ? '22px' : len > 7 ? '24px' : len > 5 ? '28px' : len > 3 ? '36px' : '';
     quizHint.textContent = q.hint;
     quizOptions.innerHTML = '';
     q.options.forEach((opt) => {
@@ -1371,7 +1432,11 @@
     hudScore.textContent = String(state.score);
     hudCombo.textContent = `×${state.combo}`;
     const meta = SUBJECT_META[state.subject] || SUBJECT_META.chinese;
-    if (hudSubject) hudSubject.textContent = `${meta.icon} ${meta.name}`;
+    let subjectLabel = `${meta.icon} ${meta.name}`;
+    if (state.subject === 'math') {
+      subjectLabel += ` · ${(MATH_MODES[state.mathMode] || MATH_MODES.normal).name}`;
+    }
+    if (hudSubject) hudSubject.textContent = subjectLabel;
 
     const seeds = document.querySelectorAll('.seed');
     for (let i = 0; i < seeds.length; i += 1) {
@@ -1436,13 +1501,45 @@
       <p class="best">历史最高分：<b>${bestScore}</b></p>
     `);
     overlayCard.querySelectorAll('.subject-card').forEach((btn) => {
-      btn.addEventListener('click', () => startGame(btn.dataset.subject));
+      btn.addEventListener('click', () => {
+        if (btn.dataset.subject === 'math') showMathMenu();
+        else startGame(btn.dataset.subject);
+      });
     });
   }
 
-  function startGame(subject) {
+  function showMathMenu() {
+    state.phase = 'menu';
+    showOverlay(`
+      <h2>🔢 数学 · 选择练习方式</h2>
+      <p>两种模式都是 5 波，答对题目即可消灭僵尸</p>
+      <div class="subject-grid mode-grid">
+        <button class="subject-card" data-mode="normal" type="button">
+          <span class="subject-icon">🧮</span>
+          <span class="subject-name">常规练习</span>
+          <span class="subject-desc">按数域循序渐进</span>
+          <span class="subject-stages">1-9 分解 · 10 以内加减 · 20 以内加减</span>
+        </button>
+        <button class="subject-card" data-mode="inverse" type="button">
+          <span class="subject-icon">🔄</span>
+          <span class="subject-name">颠倒数练习</span>
+          <span class="subject-desc">两位数、三位数颠倒后的和与差</span>
+          <span class="subject-stages">52 − 25 = 27 · 52 + 25 = 77 · 521 ± 125</span>
+        </button>
+      </div>
+      <button class="btn-ghost" id="btn-back-subjects" type="button">返回科目选择</button>
+    `);
+    overlayCard.querySelectorAll('.mode-grid .subject-card').forEach((btn) => {
+      btn.addEventListener('click', () => startGame('math', btn.dataset.mode));
+    });
+    const back = document.getElementById('btn-back-subjects');
+    if (back) back.addEventListener('click', showMenu);
+  }
+
+  function startGame(subject, mode) {
     AudioFX.init();
     state.subject = SUBJECT_META[subject] ? subject : state.subject;
+    if (MATH_MODES[mode]) state.mathMode = mode;
     Object.assign(state, {
       phase: 'playing',
       paused: false,
@@ -1515,10 +1612,13 @@
     state.questionLocked = false;
     renderQuiz();
     AudioFX.win();
+    const winText = state.subject === 'math' && state.mathMode === 'inverse'
+      ? '颠倒数小达人！'
+      : SUBJECT_META[state.subject].winText;
     showOverlay(`
       <h2>🎉 你守住了草坪！</h2>
       <p>本局得分 <b style="color:#ffd23f">${state.score}</b> · 最高连击 ×${state.maxCombo}</p>
-      <p>成功挡下全部 ${TOTAL_WAVES} 波僵尸，${SUBJECT_META[state.subject].winText}</p>
+      <p>成功挡下全部 ${TOTAL_WAVES} 波僵尸，${winText}</p>
       <div class="overlay-actions">
         <button class="btn-primary" id="btn-again" type="button">再玩一次</button>
         <button class="btn-ghost" id="btn-menu" type="button">换科目</button>

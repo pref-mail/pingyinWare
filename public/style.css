@@ -315,6 +315,18 @@ body {
   transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
+.mode-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.mode-grid .subject-card {
+  padding: 20px 14px;
+}
+
+#btn-back-subjects {
+  margin-top: 16px;
+}
+
 .subject-card:hover {
   transform: translateY(-3px);
   border-color: rgba(165, 214, 63, 0.7);
