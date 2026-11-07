@@ -1,6 +1,6 @@
 {
   "name": "pvz-pinyin",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "植物大战僵尸·教学版 —— 语文拼音 / 数学口算 / 英语单词 塔防学习游戏（Electron 桌面版 + Node 服务）",
   "author": "pref-mail",
