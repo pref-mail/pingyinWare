@@ -62,6 +62,7 @@ async function startApp() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
+      autoplayPolicy: 'no-user-gesture-required',
     },
   });
 

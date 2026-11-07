@@ -70,7 +70,8 @@
 - 僵尸与植物碰撞会同归于尽，摆植物也是一次防守决策
 - 连击加成：答得越快越准，单题得分越高
 - 僵尸分普通、快速、护甲三类，波次越高越强
-- 纯程序化音效（WebAudio），无外部素材依赖
+- 战斗音效由 WebAudio 程序化生成
+- 启动页/选科目播放 Baltic Levity 背景音乐，进入游戏自动暂停；静音键同时控制音乐与音效
 - 成绩榜保存在服务端，重启不丢失
 
 ## 本地运行
@@ -121,7 +122,9 @@ npx electron-builder --win portable --config.directories.output=../pvz-build
 ├── public/
 │   ├── index.html      # 页面结构（HUD、种子栏、答题面板）
 │   ├── style.css       # 深绿玻璃拟态主题 + 响应式
-│   └── game.js         # 游戏循环、三科出题、僵尸/植物/渲染/音效
+│   ├── game.js         # 游戏循环、三科出题、僵尸/植物/渲染/音效
+│   ├── plants/         # 植物 SVG 素材
+│   └── audio/          # 启动页背景音乐
 ├── data/
 │   ├── words.json      # 语文 3 关 × 30 词
 │   └── english.json    # 英语水果类 / 动物类词库

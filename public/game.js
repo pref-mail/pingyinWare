@@ -120,6 +120,7 @@
   const hudScore = document.getElementById('hud-score');
   const hudCombo = document.getElementById('hud-combo');
   const hudSubject = document.getElementById('hud-subject');
+  const menuBgm = document.getElementById('menu-bgm');
   const btnMute = document.getElementById('btn-mute');
   const btnPause = document.getElementById('btn-pause');
   const bannerEl = document.getElementById('banner');
@@ -134,6 +135,22 @@
 
   canvas.width = W;
   canvas.height = H;
+
+  menuBgm.volume = 0.35;
+
+  function playMenuMusic() {
+    if (!menuBgm || state.muted || state.phase !== 'menu') return;
+    const played = menuBgm.play();
+    if (played && typeof played.catch === 'function') {
+      played.catch(() => { /* 浏览器自动播放受限时等首次交互 */ });
+    }
+  }
+
+  function stopMenuMusic() {
+    if (!menuBgm) return;
+    menuBgm.pause();
+    menuBgm.currentTime = 0;
+  }
 
   const plantImages = { peashooter: null };
   (function preloadPlantImages() {
@@ -1506,6 +1523,7 @@
         else startGame(btn.dataset.subject);
       });
     });
+    playMenuMusic();
   }
 
   function showMathMenu() {
@@ -1534,10 +1552,12 @@
     });
     const back = document.getElementById('btn-back-subjects');
     if (back) back.addEventListener('click', showMenu);
+    playMenuMusic();
   }
 
   function startGame(subject, mode) {
     AudioFX.init();
+    stopMenuMusic();
     state.subject = SUBJECT_META[subject] ? subject : state.subject;
     if (MATH_MODES[mode]) state.mathMode = mode;
     Object.assign(state, {
@@ -1708,6 +1728,8 @@
   btnMute.addEventListener('click', () => {
     state.muted = !state.muted;
     btnMute.textContent = state.muted ? '🔇' : '🔊';
+    menuBgm.muted = state.muted;
+    if (!state.muted) playMenuMusic();
   });
 
   window.addEventListener('keydown', (event) => {
@@ -1740,6 +1762,9 @@
     updateHUD();
     render();
     await Promise.all([loadContent(), loadBest()]);
+    const kickMenuMusic = () => playMenuMusic();
+    window.addEventListener('click', kickMenuMusic, { once: true });
+    window.addEventListener('keydown', kickMenuMusic, { once: true });
     showMenu();
     requestAnimationFrame(loop);
   }
