@@ -148,6 +148,12 @@ body {
   line-height: 1;
 }
 
+.seed-img {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
 .seed-name {
   font-size: 13px;
   font-weight: 600;

@@ -124,6 +124,13 @@
   canvas.width = W;
   canvas.height = H;
 
+  const plantImages = { peashooter: null };
+  (function preloadPlantImages() {
+    const img = new Image();
+    img.onload = () => { plantImages.peashooter = img; };
+    img.src = '/plants/peashooter.svg';
+  })();
+
   // ---------------- 状态 ----------------
   let words = [];
   let wordsByLevel = { 1: [], 2: [], 3: [] };
@@ -271,6 +278,11 @@
     },
     hurt() {
       this.tone(120, 0, 0.3, 'square', 0.08);
+    },
+    explode() {
+      this.tone(90, 0, 0.28, 'sawtooth', 0.09);
+      this.tone(55, 0.03, 0.32, 'square', 0.07);
+      this.tone(200, 0, 0.1, 'triangle', 0.05);
     },
     wave() {
       this.tone(392, 0, 0.12, 'triangle', 0.07);
@@ -739,14 +751,14 @@
     const center = cellCenter(spec.lane, 0);
     const base = 24 + state.wave * 3.5;
     let speed = base;
-    let hp = 1;
+    let hp = 2;
     let scale = 1;
 
     if (spec.type === 'fast') {
       speed = base * 1.55;
     } else if (spec.type === 'armor') {
       speed = base * 0.82;
-      hp = 3;
+      hp = 4;
       scale = 1.08;
     }
 
@@ -807,6 +819,7 @@
     if (state.phase === 'playing') {
       updateSpawning(dt);
       updateZombies(dt);
+      updatePlantCollisions();
       updatePlants(dt);
       updatePeas(dt);
 
@@ -855,6 +868,44 @@
         state.zombies.splice(i, 1);
         onZombieBreach(z);
       }
+    }
+  }
+
+  function updatePlantCollisions() {
+    for (let i = state.zombies.length - 1; i >= 0; i -= 1) {
+      const z = state.zombies[i];
+      if (z.dead) continue;
+
+      let plantIndex = -1;
+      let bestDist = Infinity;
+      for (let j = 0; j < state.plants.length; j += 1) {
+        const p = state.plants[j];
+        if (p.row !== z.row) continue;
+        const dist = Math.abs(p.x - z.x);
+        if (dist <= 30 && dist < bestDist) {
+          bestDist = dist;
+          plantIndex = j;
+        }
+      }
+      if (plantIndex === -1) continue;
+
+      const plant = state.plants[plantIndex];
+      state.plants.splice(plantIndex, 1);
+      state.zombies.splice(i, 1);
+
+      AudioFX.explode();
+      addParticles(plant.x, plant.y - 6, '#ffd23f', 16);
+      addParticles(z.x, z.y - 10, '#8ee04a', 12);
+      floater((plant.x + z.x) / 2, plant.y - 46, '💥 爆炸', '#ffd23f', 1.2, true);
+      state.shake = Math.max(state.shake, 6);
+
+      if (state.activeId === z.id) {
+        state.activeId = null;
+        state.question = null;
+        state.questionLocked = false;
+        renderQuiz();
+      }
+      updateHUD();
     }
   }
 
@@ -1112,7 +1163,11 @@
       ctx.fill();
 
       const sway = Math.sin(state.time * 2 + p.sway) * 2.2;
-      drawEmoji(PLANT_TYPES[p.type].emoji, p.x + sway, p.y - 4, 46);
+      if (p.type === 'peashooter' && plantImages.peashooter) {
+        ctx.drawImage(plantImages.peashooter, p.x - 31 + sway, p.y - 46, 62, 62);
+      } else {
+        drawEmoji(PLANT_TYPES[p.type].emoji, p.x + sway, p.y - 4, 46);
+      }
 
       if (p.type === 'sunflower') {
         const ratio = Math.max(0, Math.min(1, p.timer / SUNFLOWER_INTERVAL));
